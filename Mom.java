@@ -37,10 +37,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class Mom {
-    public            JPanel panel2 = new  MyBackground();
+    public JPanel panel2 = new MyBackground();
 
     private void createConnectionToDataBase() {
         try {
+
             String hostName = "localhost";
             String dbName = "mom";
             String userName = "root";
@@ -48,6 +49,7 @@ public class Mom {
             String url = "jdbc:mysql://" + hostName + ":3320/" + dbName + "?user=" + userName + "&password=" + passWord;
             connection = DriverManager.getConnection(url);
             stmt = connection.createStatement();
+
         } catch(SQLException sqle) {
             sqle.printStackTrace();
         }
@@ -123,10 +125,24 @@ private JTree tree2 = null;
                     }
                 setActionListenerForDb(did);
                 setJTableSwithDb();
+                try {
+                    String sql = "select amount from topinvoices where id = " + did;
+                    ResultSet r = stmt.executeQuery(sql);
+                    if(r.next()) {
+                        jlabel.setText("Total: $" + r.getString("amount"));
+                        jlabel.setForeground(Color.green);
+                        jlabel.setBounds(120, 234, 200, 30);
+                        panel.updateUI();
+                    }
+                } catch(SQLException sqlE) {
+                    sqlE.printStackTrace();
+                }
             }
         });
     }
-    
+
+    JLabel jlabel = new JLabel();
+
     private void setTreeSelectionListenerForTree2() {
         tree2.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -148,10 +164,149 @@ private JTree tree2 = null;
     }
 
     private void refreshUI() {
+        panel.remove(jlabel);
+        panel.add(jlabel);
         panel.updateUI();
+    }
+    boolean toggle = true;
+    JButton TOGGLE = new JButton("<DOUBLE-CLICK>");
+    JButton T1000 = new JButton("<");
+    private void setJPanel() {
+        panel.remove(T1000);
+        panel.add(T1000);
+        panel.remove(TOGGLE);
+        panel.add(TOGGLE);
+        TOGGLE.setBackground(Color.PINK);
+        TOGGLE.setForeground(Color.BLUE);
+        TOGGLE.setFont(new Font("arial", Font.BOLD, 7));
+        TOGGLE.setBounds(125, 333, 100, 33);
+        T1000.setBounds(80, 10, 45, 500);
+        T1000.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                toggle = ! toggle;
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        Thread trd = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Mom.this.frame.dispose();
+                                setUI();
+                                setBackgroundImages();
+                                try {
+                                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                                    Object nodeInfo = node.getUserObject();
+                                    String v = nodeInfo.toString();
+                                    if(v != null)
+                                        if(v.length() > 0) {
+                                            StringTokenizer stz = new StringTokenizer(v, " ");
+                                            String s = stz.nextToken();
+                                            did = Integer.parseInt(s);
+                                        }
+                                    try {
+                                        String sql = "select amount from topinvoices where id = " + did;
+                                        ResultSet r = stmt.executeQuery(sql);
+                                        if(r.next()) {
+                                            JLabel label = new JLabel("Total:$" + r.getString("amount"));
+                                            panel.add(label);
+                                            label.setForeground(Color.green);
+                                            label.setBounds(10, 500, 200, 30);
+                                        }
+                                    } catch(SQLException sqlE) {
+                                        sqlE.printStackTrace();
+                                    }
+                                } catch(Exception eeee) {
+                                    eeee.printStackTrace();
+                                }
+                            }
+                        });
+                        trd.start();
+                    }
+                });
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
+        TOGGLE.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                toggle = ! toggle;
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        Thread trd = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Mom.this.frame.dispose();
+                                setUI();
+                                setBackgroundImages();
+                                try {
+                                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                                    Object nodeInfo = node.getUserObject();
+                                    String v = nodeInfo.toString();
+                                    if(v != null)
+                                        if(v.length() > 0) {
+                                            StringTokenizer stz = new StringTokenizer(v, " ");
+                                            String s = stz.nextToken();
+                                            did = Integer.parseInt(s);
+                                        }
+                                    try {
+                                        String sql = "select amount from topinvoices where id = " + did;
+                                        ResultSet r = stmt.executeQuery(sql);
+                                        if(r.next()) {
+                                            JLabel label = new JLabel("Total:$" + r.getString("amount"));
+                                            panel.add(label);
+                                            label.setForeground(Color.green);
+                                            label.setBounds(10, 500, 200, 30);
+                                        }
+                                    } catch(SQLException sqlE) {
+                                        sqlE.printStackTrace();
+                                    }
+                                } catch(Exception eeee) {
+                                    eeee.printStackTrace();
+                                }
+                            }
+                        });
+                        trd.start();
+                    }
+                });
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
     }
     
     private void setBackgroundImages() {
+        setJPanel();
         setTree();
         setNewButton();
         setTransferButten();
@@ -170,7 +325,8 @@ private JTree tree2 = null;
         setDaPrintInvoiceButton();
         refreshUI();
     }
-        JButton bu = new JButton("View All");
+
+    JButton bu = new JButton("View All");
                 JFrame j1 = new JFrame("View All");
     
     private void setViewAll() {
@@ -959,6 +1115,11 @@ private JTree tree2 = null;
                 pp.add(label3);
                 pp.add(label4);
                 pp.add(label5);
+                label1.setForeground(Color.WHITE);
+                label2.setForeground(Color.WHITE);
+                label3.setForeground(Color.WHITE);
+                label4.setForeground(Color.WHITE);
+                label5.setForeground(Color.WHITE);
                 label1.setBounds(10, 10, 100, 20);
                 label2.setBounds(10, 30, 100, 20);
                 label3.setBounds(10, 50, 100, 20);
@@ -1051,6 +1212,15 @@ private JTree tree2 = null;
                     JLabel label6 = new JLabel("To Address");
                     JLabel label7 = new JLabel("Amt.");
                     JLabel label8 = new JLabel("");
+                    label.setForeground(Color.WHITE);
+                    label1.setForeground(Color.WHITE);
+                    label2.setForeground(Color.WHITE);
+                    label3.setForeground(Color.WHITE);
+                    label4.setForeground(Color.WHITE);
+                    label5.setForeground(Color.WHITE);
+                    label6.setForeground(Color.WHITE);
+                    label7.setForeground(Color.WHITE);
+                    label8.setForeground(Color.WHITE);
                     pp.add(label1);
                     pp.add(label2);
                     pp.add(label3);
@@ -1174,8 +1344,14 @@ private JTree tree2 = null;
         panel = new MyBackground();
         panel.setLayout(null);
         frame.setTitle("Mom");
-        frame.setBounds(0, 0, 1200, 600);
-        panel.setBounds(frame.getBounds());
+        if(toggle) {
+            frame.setBounds(0, 0, 1200, 600);
+            T1000.setText("<");
+        } else {
+            frame.setBounds(0, 0, 250, 600);
+            T1000.setText(">");
+        }
+       panel.setBounds(frame.getBounds());
         frame.add(panel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
