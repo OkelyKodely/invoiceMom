@@ -1,5 +1,6 @@
 package mom;
 
+import static com.sun.xml.internal.fastinfoset.alphabet.BuiltInRestrictedAlphabets.table;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -9,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -18,6 +21,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.StringTokenizer;
+import javax.imageio.ImageIO;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Copies;
@@ -31,9 +35,12 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class Mom {
@@ -323,6 +330,103 @@ private JTree tree2 = null;
         setViewAll();
         setTreeSelectionListenerForTree();
         setDaPrintInvoiceButton();
+        JButton preview = new JButton("print preview");
+        preview.setBounds(790, 468, 200, 54);
+        panel.add(preview);
+        preview.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JFrame f = new JFrame("Print Preview");
+                f.setLayout(null);
+                f.setBounds(0, 0, 1000, 800);
+                JPanel pp = new MyBackground();
+                f.add(pp);
+                pp.setLayout(null);
+                pp.setBounds(f.getBounds());
+                pp.add(label2);
+                label2.setBorder(new BevelBorder(BevelBorder.LOWERED));
+                label2.setBounds(170, 150, 600, 500);
+                JLabel label = new JLabel("Item");
+                label.setFont(new Font("arial",Font.BOLD,20));
+                label.setForeground(Color.black);
+                pp.add(label);
+                label.setBounds(190, 110, 130, 30);
+
+                label = new JLabel("Description");
+                label.setFont(new Font("arial",Font.BOLD,20));
+                label.setForeground(Color.black);
+                pp.add(label);
+                label.setBounds(290, 110, 130, 30);
+
+                label = new JLabel("Unit Price");
+                label.setFont(new Font("arial",Font.BOLD,20));
+                label.setForeground(Color.black);
+                pp.add(label);
+                label.setBounds(430, 110, 120, 30);
+
+                label = new JLabel("Qty");
+                label.setFont(new Font("arial",Font.BOLD,20));
+                label.setForeground(Color.black);
+                pp.add(label);
+                label.setBounds(550, 110, 120, 30);
+
+                label = new JLabel("Amount");
+                label.setFont(new Font("arial",Font.BOLD,20));
+                label.setForeground(Color.black);
+                pp.add(label);
+                
+                label.setBounds(700, 110, 120, 30);
+                String lll = "";
+                try {
+                    try {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                        Object nodeInfo = node.getUserObject();
+                        String v = nodeInfo.toString();
+                        if(v != null)
+                            if(v.length() > 0) {
+                                StringTokenizer stz = new StringTokenizer(v, " ");
+                                String s = stz.nextToken();
+                                did = Integer.parseInt(s);
+                            }
+                    } catch(Exception ee) {
+                        ee.printStackTrace();
+                    }
+
+                    String sql = "select amount from topinvoices where id = " + did;
+                    ResultSet rs = stmt.executeQuery(sql);
+                    if(rs.next()) {
+                        lll = "Total: $" + rs.getString("amount");
+                    }
+                } catch(Exception e3) {
+                    e3.printStackTrace();
+                }
+                
+                JLabel j2 = new JLabel(lll);
+                j2.setForeground(Color.gray);
+                j2.setBounds(200, 10, 300, 40);
+
+                pp.add(j2);
+
+                f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                f.setVisible(true);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
         refreshUI();
     }
 
@@ -380,6 +484,34 @@ private JTree tree2 = null;
         });
     }
     
+    private String getAmount() {
+        try {
+            int did = -1;
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            Object nodeInfo = node.getUserObject();
+            String v = nodeInfo.toString();
+            if(v != null)
+                if(v.length() > 0) {
+                    StringTokenizer stz = new StringTokenizer(v, " ");
+                    String s = stz.nextToken();
+                    did = Integer.parseInt(s);
+                }
+                try {
+                    String sql = "select amount from invoices where id = " + did + ";";
+                    ResultSet rs = stmt.executeQuery(sql);
+                    rs.next();
+                    return rs.getString("amount");
+                } catch(Exception e3) {
+                    e3.printStackTrace();
+                }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    JTable muy = new JTable();
+
     private void setDaPrintInvoiceButton() {
 
         JButton b = new JButton("Print Invoice..");
@@ -391,24 +523,115 @@ private JTree tree2 = null;
                 pras.add(new Copies(1));
 
                 try {
+                    
+                    ((DefaultTableModel)muy.getModel()).addColumn("From Name:");
+                    ((DefaultTableModel)muy.getModel()).addColumn("From Address:");
+                    ((DefaultTableModel)muy.getModel()).addColumn("To Name:");
+                    ((DefaultTableModel)muy.getModel()).addColumn("To Address:");
+                    
+                    ((DefaultTableModel) muy.getModel()).addRow(new Object[]{"From Name:", 
+                                                                            "From Address:", 
+                                                                            "To Name:", 
+                                                                            "From Address:"});
 
-                    boolean printAccepted = lbl.print(JTable.PrintMode.FIT_WIDTH,
-                            new MessageFormat("Author Table"),
+                    ((DefaultTableModel) muy.getModel()).addRow(new Object[]{yourNameFrom.getText(), 
+                                                                            yourAddressFrom.getText(), 
+                                                                            yourNameTo.getText(), 
+                                                                            yourAddressTo.getText()});
+                    
+                    ((DefaultTableModel) muy.getModel()).addRow(new Object[]{new String(), 
+                                                                            new String(), 
+                                                                            new String(), 
+                                                                            new String()});
+
+                    ((DefaultTableModel) muy.getModel()).addRow(new Object[]{"Item", 
+                                                                            "Description", 
+                                                                            "Price", 
+                                                                            "Qty"});
+                    
+                    muy.setBounds(0, 0, 1000, 500);
+                    muy.getColumnModel().getColumn(0).setPreferredWidth(200);
+                    muy.getColumnModel().getColumn(1).setPreferredWidth(200);
+                    muy.getColumnModel().getColumn(2).setPreferredWidth(200);
+                    muy.getColumnModel().getColumn(3).setPreferredWidth(200);
+     
+                    PageFormat pageFormat = new PageFormat();
+                    
+                    print(gr, pageFormat, 0);
+                    
+                    panel.remove(lbl);
+                    panel.add(muy);
+                    panel.updateUI();
+
+                    for(int i = 0; i < lbl.getRowCount(); i++) {
+                        String a = (String) lbl.getModel().getValueAt(i, 1);
+                        String b = (String) lbl.getModel().getValueAt(i, 2);
+                        String c = (String) lbl.getModel().getValueAt(i, 3);
+                        String d = (String) lbl.getModel().getValueAt(i, 4);
+                        ((DefaultTableModel) muy.getModel()).addRow(new Object[]{a, b, c, d});
+                    }
+
+                    boolean printAccepted = muy.print(JTable.PrintMode.FIT_WIDTH,
+                            new MessageFormat("Total to Pay: $" + getAmount()),
                             new MessageFormat("Page - {0}"),
-                            false, pras, false);
+                            true, pras, true);
 
                     //..closeFrame();
                     if (!printAccepted) {
                         throw new RuntimeException("User cancels the printer job!");
                     }
+                    
+                    panel.remove(muy);
+                    panel.add(lbl);
+                    panel.updateUI ();
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     throw new RuntimeException(e);
                 }
             }
         });
         b.setBounds(150, 500, 110, 20);
         panel.add(b);
+    }
+    
+public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+
+    // for easy access to these values
+    final int imgWidth = (int) pageFormat.getImageableWidth();
+    final int imgHeight = (int) pageFormat.getImageableHeight();
+
+    if (imgWidth <= 0) {
+        throw new PrinterException("Width of printable area is too small.");
+    }
+
+    // Have we modified the column widths yet??
+    if (1==1) {
+
+        // Only update the column widths if the current total column width
+        // is less then the available imgWidth (page width)
+        if (1==1) {
+
+            // Calculate the required column width to allow the columns to
+            // span the page...
+            int columnCount = muy.getColumnCount();
+            int columnWidth = (int) (imgWidth / (float) columnCount);
+            TableColumnModel columnModel = muy.getColumnModel();
+            // Update the columns...
+            for (int col = 0; col < columnModel.getColumnCount(); col++) {
+                TableColumn tc = columnModel.getColumn(col);
+                tc.setMinWidth(columnWidth);
+                tc.setMaxWidth(columnWidth);
+                tc.setPreferredWidth(columnWidth);
+                tc.setWidth(columnWidth);
+            }
+            // Update the totalColWidth, this should prevent
+            // any scaling been applied
+            
+        }
+    }
+
+        return 0;
     }
     
     private void setItemsSaveOntoDb() {
@@ -556,14 +779,15 @@ private JTree tree2 = null;
                 String value2 = label.getModel().getValueAt(row, 1).toString();
                 String value3 = label.getModel().getValueAt(row, 2).toString();
                 JFrame j = new JFrame("Item");
-                JPanel p = new JPanel();
+                JPanel p = new MyBackground();
                 j.setBounds(0, 0, 800, 934);
                 p.setBounds(j.getBounds());
                 j.add(p);
                 j.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 j.setVisible(true);
                 JButton bb = new JButton("Delete Selected Invoice");
-                bb.setBounds(90, 800, 900, 80);
+                bb.setForeground(Color.red);
+                bb.setBounds(90, 800, 597, 80);
                 Font fff = new Font("arial", Font.PLAIN,  40);
                 bb.setFont(fff);
                 p.add(bb);
@@ -609,6 +833,11 @@ private JTree tree2 = null;
                 lblPri.setBounds(10, 200, 140, 20);
                 lblQty.setBounds(10, 240, 140, 20);
                 lblAtm.setBounds(10, 280, 140, 20);
+                lblItem.setForeground(Color.WHITE);
+                lblDesci.setForeground(Color.WHITE);
+                lblPri.setForeground(Color.WHITE);
+                lblQty.setForeground(Color.WHITE);
+                lblAtm.setForeground(Color.WHITE);
                 p.add(lblItem);
                 p.add(lblDesci);
                 p.add(lblPri);
@@ -618,6 +847,10 @@ private JTree tree2 = null;
                 JLabel toName = new JLabel("To Name:");
                 JLabel fromAddress = new JLabel("From Address:");
                 JLabel toAddress = new JLabel("To Address:");
+                fromName.setForeground(Color.WHITE);
+                toName.setForeground(Color.PINK);
+                fromAddress.setForeground(Color.WHITE);
+                toAddress.setForeground(Color.PINK);
                 fromName.setBounds(10, 10, 140, 20);
                 fromAddress.setBounds(10, 40, 140, 20);
                 toName.setBounds(10, 70, 140, 20);
@@ -628,6 +861,25 @@ private JTree tree2 = null;
                 p.setLayout(null);
                 p.add(fromAddress);
                 p.add(toAddress);
+                ImageIcon icon = new ImageIcon("item.png");
+                JLabel jjj = new JLabel(icon);
+                jjj.setBounds(400, 200, 100, 100);
+                Thread ttt = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while(true) {
+                            try {
+                                Graphics gr = p.getGraphics();
+                                Image img = ImageIO.read(getClass().getResourceAsStream("item.png"));
+                                gr.drawImage(img, 400, 200, 411, 540, null);
+                            } catch(Exception ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                ttt.start();
+                p.add(jjj);
                 JTextField fName = new JTextField();
                 JTextField tName = new JTextField();
                 JTextField fAddress = new JTextField();
@@ -656,6 +908,7 @@ private JTree tree2 = null;
                 p.add(qt);
                 p.add(at);
                 JButton b = new JButton("Update.");
+                b.setForeground(Color.black);
                 b.setBounds(10, 450, 100, 20);
                 p.add(b);
                 b.addMouseListener(new MouseListener() {
@@ -792,6 +1045,8 @@ private JTree tree2 = null;
         mel.setValueAt(price.getText(), rowID, 3);
     }
     
+    JTable label2 = null;
+
     private void setJTableSwithDb() {
         int did = -1;
         try {
@@ -807,17 +1062,17 @@ private JTree tree2 = null;
         } catch(Exception e) {
             e.printStackTrace();
         }
-        JTable label = new JTable(df);
-        label.setFont(new Font("arial",Font.BOLD,11));
-        label.setForeground(Color.gray);
-        label.setBackground(Color.WHITE);
+        label2 = new JTable(df);
+        label2.setFont(new Font("arial",Font.BOLD,11));
+        label2.setForeground(Color.gray);
+        label2.setBackground(Color.WHITE);
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {            }
         });
         t.start();
-        panel.add(label);
-        label.setBounds(590, 150, 580, 300);
+        panel.add(label2);
+        label2.setBounds(590, 150, 580, 300);
         String ynf = "", yaf = "", ynt = "", yat = "";
         try {
             String sql = "select * from topinvoices where id = " + did + ";";
@@ -835,7 +1090,7 @@ private JTree tree2 = null;
         yourAddressFrom.setText(yaf);
         yourNameTo.setText(ynt);
         yourAddressTo.setText(yat);
-        lbl = label;
+        lbl = label2;
         
     }
     
@@ -1407,6 +1662,8 @@ private JTree tree2 = null;
     private boolean start2 = true;
 
     public Mom()    {
+        new JSplashScreen().show();
+        
         connectToDataBase();
         setUI();
         setBackgroundImages();
