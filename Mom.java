@@ -888,6 +888,11 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
                 j.add(p);
                 j.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 j.setVisible(true);
+                JLabel label0 = new JLabel("Invoice Mom");
+                label0.setFont(new Font("arial",Font.BOLD,65));
+                p.add(label0);
+                label0.setForeground(Color.red);
+                label0.setBounds(360, 90, 400, 75);
                 JButton bb = new JButton("Delete Selected Invoice");
                 bb.setForeground(Color.red);
                 bb.setBounds(90, 800, 597, 80);
