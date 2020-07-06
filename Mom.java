@@ -139,7 +139,7 @@ private JTree tree2 = null;
                     if(r.next()) {
                         jlabel.setText("Total: $" + r.getString("amount"));
                         jlabel.setForeground(Color.green);
-                        jlabel.setBounds(120, 234, 200, 30);
+                        jlabel.setBounds(150, 234, 200, 30);
                         panel.updateUI();
                     }
                 } catch(SQLException sqlE) {
@@ -1374,11 +1374,12 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
     }
     
     private void setInvoiceLabel() {
-        JLabel label = new JLabel("INVOICE");
-        label.setFont(new Font("arial",Font.BOLD,30));
+        JLabel label = new JLabel("Invoice Mom");
+        label.setFont(new Font("arial",Font.BOLD,65));
         
         panel.add(label);
-        label.setBounds(930, 10, 130, 30);
+        label.setForeground(Color.red);
+        label.setBounds(790, 10, 430, 80);
     }
 
     private void setToLabel() {
@@ -1447,9 +1448,14 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
                 JFrame jj = new JFrame("New Items");
                 JPanel pp = new MyBackground();
                 jj.setLayout(null);
-                jj.setBounds(0, 0, 500, 800);
+                jj.setBounds(0, 0, 500, 590);
                 pp.setBounds(jj.getBounds());
                 jj.add(pp);
+                JLabel label0 = new JLabel("Invoice Mom");
+                label0.setFont(new Font("arial",Font.BOLD,40));
+                pp.add(label0);
+                label0.setForeground(Color.red);
+                label0.setBounds(120, 450, 430, 80);
                 pp.setLayout(null);
                 jj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 jj.setVisible(true);
@@ -1555,10 +1561,15 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
                     JFrame jj = new JFrame("New");
                     JPanel pp = new MyBackground();
                     jj.setLayout(null);
-                    jj.setBounds(0, 0, 500, 800);
+                    jj.setBounds(0, 0, 500, 590);
                     pp.setBounds(jj.getBounds());
                     jj.add(pp);
                     pp.setLayout(null);
+                    JLabel label0 = new JLabel("Invoice Mom");
+                    label0.setFont(new Font("arial",Font.BOLD,40));
+                    pp.add(label0);
+                    label0.setForeground(Color.red);
+                    label0.setBounds(116, 455, 430, 80);
                     jj.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     jj.setVisible(true);
                     JLabel label = new JLabel("Date - " + (new Date().getMonth()+1) + new Date().getDate() + (new Date().getYear()+1900));
@@ -1701,7 +1712,7 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
         frame.setLayout(null);
         panel = new MyBackground();
         panel.setLayout(null);
-        frame.setTitle("Mom");
+        frame.setTitle("Invoice Mom v. 2.");
         if(toggle) {
             frame.setBounds(0, 0, 1200, 600);
             T1000.setText("<");
