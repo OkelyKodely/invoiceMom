@@ -4,6 +4,7 @@ import static com.sun.xml.internal.fastinfoset.alphabet.BuiltInRestrictedAlphabe
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -327,6 +328,7 @@ private JTree tree2 = null;
         setDaItemsHeader();
         setJTableSwithDb();
         setSaveButton();
+        setNotes();
         setViewAll();
         setTreeSelectionListenerForTree();
         setDaPrintInvoiceButton();
@@ -430,6 +432,107 @@ private JTree tree2 = null;
         refreshUI();
     }
 
+    private void setNotes() {
+        JButton ab = new JButton("Notes");
+        ab.setBounds(130, 460, 100, 30);
+        panel.add(ab);
+        ab.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                JFrame fra = new JFrame("Notes");
+                JPanel pan = new MyBackground();
+                fra.setBounds(0, 0, 500, 750);
+                pan.setBounds(fra.getBounds());
+                fra.add(pan);
+                fra.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                fra.setVisible(true);
+
+                fra.setLayout(null);
+                pan.setLayout(null);
+                
+                JLabel l = new JLabel("Notes:");
+                l.setBounds(10, 10, 200, 20);
+                pan.add(l);
+
+                JTextArea a = new JTextArea();
+                a.setBounds(120, 10, 300, 300);
+                pan.add(a);
+
+                try {
+                    String sql = "select notes from notes;";
+                    ResultSet rs = stmt.executeQuery(sql);
+                    if(rs.next()) {
+                        a.setText(rs.getString("notes"));
+                    }
+                } catch(SQLException sqle) {
+                    sqle.printStackTrace();
+                }
+
+                JButton b = new JButton("Save");
+                b.setForeground(Color.BLACK);
+                b.setBounds(10, 400, 300, 300);
+                pan.add(b);
+                b.addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        try {
+                            String sql = "update notes set notes = '"+a.getText()+"';";
+                            stmt.execute(sql);
+                            ResultSet rs = stmt.executeQuery("select count(notes) as notes from notes;");
+                            int v = 0;
+                            if(rs.next()) {
+                                v = rs.getInt("notes");
+                            }
+                            if(v == 0) {
+                                try {
+                                    String sql2 = "insert into notes (notes) values ('"+a.getText()+"');";
+                                    stmt.execute(sql2);
+                                } catch(SQLException sq) {
+                                    sq.printStackTrace();
+                                }
+                            }
+                        } catch(SQLException sqle) {
+                            sqle.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                    }
+                });
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
+    }
+    
+    
     JButton bu = new JButton("View All");
                 JFrame j1 = new JFrame("View All");
     
@@ -1606,9 +1709,15 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
             frame.setBounds(0, 0, 250, 600);
             T1000.setText(">");
         }
-       panel.setBounds(frame.getBounds());
+        panel.setBounds(frame.getBounds());
         frame.add(panel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                new JSplashScreen().show();
+                System.exit(0);
+            }
+        });
         frame.setVisible(true);
     }
     
@@ -1627,7 +1736,7 @@ public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws
         });
     }
 
-    private JFrame frame = null;
+    private Frame frame = null;
     
     private JPanel panel = null;
     
